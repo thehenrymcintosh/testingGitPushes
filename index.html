@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en">
+
+  <script src="https://www.celljs.org/cell.js"></script>
+  <script src="page.js" type="text/javascript"></script>
+  <!-- <script src="/inc/jquery-3.2.1.min.js"></script> -->
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuCo4xnB7K_7dWg9CqJoPBJp0SkQldi6I&libraries=places&callback=initMap"
+ type="text/javascript"></script>
+  <link href="styles.css" rel="stylesheet">
+
+
+  <body>
+    <h1 id=title>Yolk</h1>
+
+<svg id="help" width="32px" height="32px" viewBox="0 0 26 26" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 46.1 (44463) - http://www.bohemiancoding.com/sketch -->
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard" transform="translate(-471.000000, -27.000000)">
+            <g id="Group-2" transform="translate(472.000000, 28.000000)">
+                <text id="?" font-family="Roboto-Light, Roboto" font-size="16" font-weight="300" fill="#B3B3B3">
+                    <tspan x="8.3671875" y="18">?</tspan>
+                </text>
+                <circle id="Oval-2" stroke="#B3B3B3" cx="12" cy="12" r="12"></circle>
+            </g>
+        </g>
+    </g>
+  </svg>
+  </body>
+
+<script>
+var timeinterval;
+var elapsed = 0;
+function initClock(){
+  startTimerAnimation(document.getElementById("countdown_main")._time - elapsed);
+  timeinterval = setInterval(function(){
+    elapsed +=1;
+    var remaining = document.getElementById("countdown_main")._time - elapsed;
+    console.log(elapsed);
+    console.log(remaining);
+
+    document.getElementById("countdown_main").innerHTML = displayTime(remaining);
+    // output.$text = displayTime(elapsed);
+    document.querySelector(".playpause")._remaining = document.getElementById("countdown_main")._time - elapsed;
+    if(remaining<=0){
+      clearInterval(timeinterval);
+      startDoneAnimation();
+    }
+  },1000);
+}
+function pauseClock(){
+  clearInterval(timeinterval);
+  stopTimerAnimation();
+}
+function resetClock(){
+  document.querySelector("h4").style = "visibility: hidden";
+  elapsed = 0;
+  var t = document.getElementById("countdown_main")._time;
+  document.querySelector(".playpause")._remaining = t;
+  document.getElementById("countdown_main").innerHTML = displayTime(t);
+  resetTimerAnimation(t)
+  stopDoneAnimation();
+}
+function startTimerAnimation(time){
+  dial = document.getElementById("dial_animator");
+  angle = 360 - 0.5*time;
+  console.log(angle);
+  dial.setAttribute("from", angle + " 50 50");
+  dial.setAttribute("to", "360 50 50");
+  dial.setAttribute("dur", time + "s");
+  dial.beginElement();
+}
+function stopTimerAnimation(){
+  dial = document.getElementById("dial_animator");
+  dial.endElement();
+}
+function resetTimerAnimation(time){
+startTimerAnimation(time);
+setTimeout(stopTimerAnimation, 100);
+}
+function displayTime(seconds){
+  mins = Math.floor(seconds/60);
+  secs = seconds%60;
+  if (secs === 0){
+    secs = "00";
+  }else if (secs <10){
+    secs = "0" + secs;
+  }
+  time = mins + ":" + secs;
+  return time;
+}
+function startDoneAnimation(){
+  document.querySelector("#main-tile-2").className += " animate";
+}
+function stopDoneAnimation(){
+  tile_2 = document.querySelector("#main-tile-2")
+  tile_2.className = tile_2.className.replace(/\banimate\b/,'');
+}
+
+function initMap() {
+var elevator = new google.maps.ElevationService;
+var input = document.getElementById('main-input');
+var searchBox = new google.maps.places.SearchBox(input);
+
+searchBox.addListener('places_changed', function() {
+    data = document.getElementById("location_data");
+    plus = document.getElementById("add_btn");
+    locBtn = document.querySelector(".location_btn");
+    main = document.getElementById("main-input");
+          var places = searchBox.getPlaces();
+          if (places.length == 0) {
+            return;
+          }
+          if (places.length > 1){
+            console.log("Please select a more specific location");
+            return;
+          }
+          places.forEach(function(place) {
+                console.log("Name: " + place.name + " Position " + place.geometry.location);
+                elevator.getElevationForLocations({
+                'locations': [place.geometry.location]
+              }, function(results, status) {
+                document.querySelector(".location_btn").style = "";
+                if (status === 'OK') {
+                  // Retrieve the first result
+                  if (results[0]) {
+                    // Open the infowindow indicating the elevation at the clicked position.
+                    console.log('The elevation at this point <br>is ' +
+                        results[0].elevation + ' meters.');
+                        main.style = "border-bottom:  2px green solid;";
+                        data._location = place.geometry.location;
+                        data._locationName = place.name;
+                        data._elevation = results[0].elevation;
+                        plus._newPos("up");
+                  } else {
+                    console.log('No results found');
+                    main.style = "border-bottom:  2px red solid;";
+                    plus._newPos("down");
+                  }
+                } else {
+                  console.log('Elevation service failed due to: ' + status);
+                  main.style = "border-bottom:  2px red solid;";
+                  plus._newPos("down");
+                }
+              });
+
+          });
+
+      });
+
+};
+
+function handleLocationError(browserHasGeolocation) {
+        console.log(browserHasGeolocation ?
+                              'Error: The Geolocation service failed.' :
+                              'Error: Your browser doesn\'t support geolocation.');
+      }
+function toInt(n){ return Math.round(Number(n)); };
+
+
+</script>
+
+  <script>
+
+var tile_main = {
+  $cell: true,
+  style: "",
+  class: "main-tile",
+  id: "main-tile",
+  $components: [
+    {
+      $type: "div",
+      class: "yellow-title-container",
+      $components:[
+        {
+          $type: "h1",
+          _locationName: "",
+          _elevation: 0,
+          _location: "",
+          class: "tile-title first_screen",
+          id: "location_data",
+          $text: "Location",
+          $update: function(e){
+            title_2 = document.getElementById("title_2");
+            cdMain = document.getElementById("countdown_main");
+            title_2.$text = this._locationName;
+            if(this._locationName.length >30){
+              title_2.className += " small_1";
+            }else{
+              title_2.className = title_2.className.replace(/\bsmall_1\b/,'');
+            }
+            title_altitude = document.getElementById("title_3_alt");
+            title_altitude.$text = toInt(this._elevation) + "m";
+            cdMain._altitude = toInt(this._elevation);
+          }
+        },
+        {
+          $type: "h1",
+          class: "tile-title",
+          id: "title_2",
+          $text: "Location"
+        },{
+          $type: "h2",
+          class: "tile-title",
+          id: "title_3_alt",
+          $text: "1200m"
+        }
+      ]
+    },
+    {
+      $type: "h3",
+      id: "input_placeholder",
+      $text: "Search",
+      class: "first_screen",
+      _add: function(val) { this.$text = val },
+    },
+    {
+      $type: "input",
+      type: "text",
+      class: "main-input first_screen",
+      id: "main-input",
+      placeholder: "",
+      $init: function(e) { this.focus();
+      initMap(); },
+      onkeyup: function(e) {
+        if ((e.keyCode >=48 && e.keyCode <=90) || (e.keyCode==8) || (e.keyCode==13) || (e.keyCode==9) || (e.keyCode==19) || (e.keyCode==32) || (e.keyCode>=188)){
+        document.getElementById("add_btn")._newPos("down");
+        document.querySelector(".location_btn").style = "";
+        document.querySelector(".location_btn").$text = "Use my location";
+        document.getElementById("main-input").style = "";
+
+      };
+    },
+
+
+    onfocus: function(e){
+      document.querySelector("#input_placeholder").style = "font-size: 14px; top: 140px ";
+      // document.getElementById("dial").style = "transform: translate(70.000000, 70.000000) rotate(12.000000) translate(-70.000000, -70.000000) translate(20.000000, 20.000000)";
+    },
+    onblur: function(e){
+      if(this.value === ""){
+      document.querySelector("#input_placeholder").style = "font-size: 20px; top: 168px";
+
+    }else{
+
+    }
+    }
+  },  {
+      $type: "h3",
+      $text: "or",
+      class: "first_screen",
+      style: "margin-top: 35px;"
+    },
+    {
+      $type: "div",
+      $text: "Use my location",
+      class: "location_btn first_screen",
+      _spin: false,
+      $update: function(e){
+        if(this._spin){
+          this.$text= "";
+          this.className += " spinner";
+        }else{
+          this.className = this.className.replace(/\bspinner\b/,'');
+        }
+      },
+      onclick: function(e){
+        this._spin = true;
+        plus = document.getElementById("add_btn");
+        data = document.getElementById("location_data");
+        main = document.getElementById("main-input");
+        locBtn = document.querySelector(".location_btn");
+        plus._newPos("down");
+        this.style="";
+        var elevator = new google.maps.ElevationService;
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            var location = {
+             lat: position.coords.latitude,
+             lng: position.coords.longitude
+           };
+           console.log(location);
+            elevator.getElevationForLocations({
+            'locations': [location]
+          }, function(results, status) {
+            document.getElementById("main-input").style = "";
+
+            if (status === 'OK') {
+              // Retrieve the first result
+              if (results[0]) {
+                // Open the infowindow indicating the elevation at the clicked position.
+                console.log('The elevation at this point <br>is ' +
+                    results[0].elevation + ' meters.');
+                    locBtn.style = "border: 2px solid green;";
+                    plus._newPos("up");
+                    locBtn._spin = false;
+                    locBtn.$text = "Location Identified";
+
+                    data._location = location;
+                    data._locationName = "Here";
+                    data._elevation = results[0].elevation;
+
+              } else {
+                console.log('No results found');
+                locBtn.style = "border: 2px solid red;";
+                plus._newPos("down");
+                locBtn._spin = false;
+                locBtn.$text = "No Results";
+              }
+            } else {
+              console.log('Elevation service failed due to: ' + status);
+              locBtn.style = "border: 2px solid red;";
+              plus._newPos("down");
+              locBtn._spin = false;
+              locBtn.$text = "Something Went Wrong";
+            }
+          });
+          }, function() {
+            handleLocationError(true);
+            plus._newPos("down");
+            locBtn._spin = false;
+            locBtn.$text = "Something Went Wrong";
+          });
+        } else {
+          // Browser doesn't support Geolocation
+          handleLocationError(false);
+          plus._newPos("down");
+          locBtn._spin = false;
+          locBtn.$text = "Something Went Wrong";
+        }
+
+      }
+    },
+  {
+    $type: "div",
+    class: "add_btn",
+    id: "add_btn",
+    style: "",
+    _position: "down",
+    _stage2: false,
+    _newPos: function(val) { this._position = val },
+    _addClass: function(newClass){
+      this.className += " " + newClass;
+    },
+    _removeClass: function(newClass){
+      this.className = this.className.replace(' ' + newClass ,'');
+    },
+    $update: function() {
+      if (this._position === "up" && this._stage2 == false){
+          this.style = "transition: top 0.2s 0.0s ease-in-out, left 0.2s 0.08s ease-in-out; top: calc(90% - 30px);";
+          this._removeClass("up");
+          return;
+      } if(this._stage2 == true){
+        this.style = "transition: top 0.25s 0.0s ease-in-out, left 0.15s 0.0s ease-in-out ; top: 23px; left: 23px;";
+        this._addClass("up");
+        return;
+      }
+        document.querySelector(".add_btn").style = "";
+    },
+    onclick: function(e) {
+      title_2 = document.getElementById("title_2");
+      title_altitude = document.getElementById("title_3_alt");
+      if(playpause._play){
+        playpause.click();
+      }
+      resetClock();
+      if (this._stage2) {
+
+        document.getElementById("main-tile").style = "min-height: 92px";
+        // this.style = "";
+        var els = document.querySelectorAll(".first_screen");
+        var i= 0, length = els.length;
+        for ( ; i < length; i++) {
+          els[i].className = els[i].className.replace(/\bhidden\b/,'');
+        }
+        title_2.className = title_2.className.replace(/\bshow\b/,'');
+        title_altitude.className = title_altitude.className.replace(/\bshow\b/,'');
+        this._stage2 = false;
+        document.getElementById("main-tile-2")._removeClass("stage_2")
+      } else {
+
+        var els = document.querySelectorAll(".first_screen");
+        var i= 0, length = els.length;
+        for ( ; i < length; i++) {
+          els[i].className += " hidden";
+        }
+        document.getElementById("main-tile").style = "height: 92px; min-height: 92px";
+        title_2.className += " show";
+        title_altitude.className += " show";
+        this._stage2 = true;
+        document.getElementById("main-tile-2")._addClass("stage_2")
+      }
+
+    },
+    $components: [{$type: "span",},{$type: "span",},{$type: "span",}]
+  }
+  ]
+}
+
+
+
+
+
+
+
+var el = {
+  $cell: true,
+  style: "font-family: Helvetica; font-size: 14px; display: none;",
+  $components: [
+    {
+      $type: "input",
+      type: "text",
+      placeholder: "Type something and press enter",
+      style: "width: 100%; outline:none; padding: 5px;",
+      // $init: function(e) { this.focus() },
+      onkeyup: function(e) {
+        if (e.keyCode === 13) {
+          document.querySelector("#list")._add(this.value);
+          this.value = "";
+        }
+      }
+    },
+    {
+      $type: "ol",
+      id: "list",
+      _items: [],
+      $components: [],
+      _add: function(val) { this._items.push(val) },
+      $update: function() {
+        this.$components = this._items.map(function(item) {
+          return { $type: "li", $text: item }
+        })
+      }
+    }
+  ]
+};
+
+
+
+
+
+var timer_main = {
+  $cell: true,
+  style: "",
+  class: "main-tile",
+  id: "main-tile-2",
+  $init: function(e){
+    document.getElementById("main-tile-2").appendChild(document.getElementById("timer"));
+    document.getElementById("timer").addEventListener("click", function(){
+        stopDoneAnimation();
+    });
+  },
+  _addClass: function(newClass){
+    this.className += " " + newClass;
+  },
+  _removeClass: function(newClass){
+    this.className = this.className.replace(' ' + newClass ,'');
+  },
+  $components: [
+    {
+      $type: "ul",
+      class: "cook_list",
+      _items: ["Soft", "Medium", "Hard"],
+      $init: function(e) {
+        this.$components = this._items.map(function(item) {
+          return {
+            $type: "li",
+            $text: item,
+            class: " ",
+            _selected: false,
+            onclick: function(e) {
+              playpause = document.getElementById("playpause");
+
+              if(playpause._play){
+                playpause.click();
+              }
+              // resetClock();
+              hardness = document.querySelectorAll(".cook_list li");
+              for ( var i = 0; i < hardness.length; i++) {
+                hardness[i]._removeClass("current");
+              }
+              this._addClass("current");
+              document.getElementById("countdown_main")._hardness = this.$text;
+              // pauseClock();
+            },
+            _addClass: function(newClass){
+              this.className += " " + newClass;
+            },
+            _removeClass: function(newClass){
+              this.className = this.className.replace(' ' + newClass ,'');
+            }
+            }
+        });
+        this.$components[1].class = " current";
+
+      }
+    },
+    {
+      $type: "div",
+      class: "countdown-container",
+      $components: [{
+        $type: "h1",
+        class: "countdown",
+        id: "countdown_main",
+        $text: "3:00",
+        _altitude: 0,
+        _hardness: "Medium",
+        _time: 0,
+        $update: function(e){
+          coeff = 400.7;
+          switch(this._hardness){
+            case "Soft":
+              tYolk = 61.5;;
+              break;
+            case "Hard":
+              tYolk = 65;
+              break;
+            default:
+              tYolk = 63;
+          }
+
+          tWater = -0.0032*this._altitude + 99.675;
+          // tWater = toInt(tWater);
+          // tYolk = 63;
+          tEgg = 4;
+          time = coeff*Math.log(0.76*((tEgg - tWater)/(tYolk - tWater)));
+
+          time = toInt(time);
+          this._time = time;
+          resetClock();
+
+
+        }
+      },{
+        $type: "div",
+        class: "playpause",
+        id: "playpause",
+        _play: false,
+        $components: [{$type: "div",},{$type: "div",}],
+        _remaining: 0,
+        _addClass: function(newClass){
+          this.className += " " + newClass;
+        },
+        _removeClass: function(newClass){
+          this.className = this.className.replace(' ' + newClass ,'');
+        },
+        onclick: function(e){
+          if (this._play){
+            this._play = false;
+            this._removeClass("paused");
+            pauseClock();
+            if(this._remaining >= 0){
+              resetClock();
+            }
+          } else {
+            this._play = true;
+            this._addClass("paused");
+            initClock();
+            document.querySelector("h4").style = "visibility: visible";
+          }
+        }
+
+      },
+      {
+        $type: "h4",
+        $text: "Reset",
+        onclick: function(e){
+          pauseClock();
+          resetClock();
+          if(playpause._play){
+            playpause.click();
+          }
+        }
+      }
+
+      ]
+
+    },
+
+  ]
+
+};
+
+
+
+</script>
+<svg id="timer" width="180px" height="180px" viewBox="0 0 124 124" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+    <defs>
+        <circle id="path-1" cx="70" cy="70" r="59"></circle>
+        <filter x="-3.6%" y="-3.6%" width="108.1%" height="108.1%" filterUnits="objectBoundingBox" id="filter-2">
+            <feOffset dx="0.5" dy="0.5" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="1.5" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.5 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard" transform="translate(-209.000000, -178.000000)">
+            <g id="Group-2" transform="translate(200.000000, 169.000000)">
+                <g id="Oval">
+                    <use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use>
+                    <use fill="#FFFFFF" fill-rule="evenodd" xlink:href="#path-1"></use>
+                </g>
+                <g id="Group-5" stroke="#979797">
+                    <g id="Group" transform="translate(14.000000, 14.000000)">
+                        <path d="M84,7.50257739 L28.0003003,104.496903" id="Path-4"></path>
+                        <path d="M104.497313,27.9998901 L7.50298756,83.9995898" id="Path-4"></path>
+                        <path d="M104.497203,83.9993995 L7.50287765,27.9996997" id="Path-4"></path>
+                        <path d="M83.9998901,104.496712 L28.0001904,7.50238703" id="Path-4"></path>
+                        <path d="M56,0 L56,111.999399" id="Path-4"></path>
+                        <path d="M111.9997,55.9996997 L0.000300266263,55.9996997" id="Path-4"></path>
+                    </g>
+                    <g id="Group-Copy" transform="translate(70.000000, 70.000000) rotate(6.000000) translate(-70.000000, -70.000000) translate(17.000000, 17.000000)">
+                        <path d="M79.5,7.1006536 L26.5002842,98.8988542" id="Path-4"></path>
+                        <path d="M98.8992424,26.499896 L7.1010418,79.4996118" id="Path-4"></path>
+                        <path d="M98.8991384,79.4994316 L7.10093778,26.4997158" id="Path-4"></path>
+                        <path d="M79.499896,98.898674 L26.5001802,7.10047344" id="Path-4"></path>
+                        <path d="M53,0 L53,105.999432" id="Path-4"></path>
+                        <path d="M105.999716,52.9997158 L0.00028418057,52.9997158" id="Path-4"></path>
+                    </g>
+                    <g id="Group-Copy-2" transform="translate(70.000000, 70.000000) rotate(12.000000) translate(-70.000000, -70.000000) translate(17.000000, 17.000000)">
+                        <path d="M79.5,7.1006536 L26.5002842,98.8988542" id="Path-4"></path>
+                        <path d="M98.8992424,26.499896 L7.1010418,79.4996118" id="Path-4"></path>
+                        <path d="M98.8991384,79.4994316 L7.10093778,26.4997158" id="Path-4"></path>
+                        <path d="M79.499896,98.898674 L26.5001802,7.10047344" id="Path-4"></path>
+                        <path d="M53,0 L53,105.999432" id="Path-4"></path>
+                        <path d="M105.999716,52.9997158 L0.00028418057,52.9997158" id="Path-4"></path>
+                    </g>
+                    <g id="Group-Copy-3" transform="translate(70.000000, 70.000000) rotate(18.000000) translate(-70.000000, -70.000000) translate(17.000000, 17.000000)">
+                        <path d="M79.5,7.1006536 L26.5002842,98.8988542" id="Path-4"></path>
+                        <path d="M98.8992424,26.499896 L7.1010418,79.4996118" id="Path-4"></path>
+                        <path d="M98.8991384,79.4994316 L7.10093778,26.4997158" id="Path-4"></path>
+                        <path d="M79.499896,98.898674 L26.5001802,7.10047344" id="Path-4"></path>
+                        <path d="M53,0 L53,105.999432" id="Path-4"></path>
+                        <path d="M105.999716,52.9997158 L0.00028418057,52.9997158" id="Path-4"></path>
+                    </g>
+                    <g id="Group-Copy-4" transform="translate(70.000000, 70.000000) rotate(24.000000) translate(-70.000000, -70.000000) translate(17.000000, 17.000000)">
+                        <path d="M79.5,7.1006536 L26.5002842,98.8988542" id="Path-4"></path>
+                        <path d="M98.8992424,26.499896 L7.1010418,79.4996118" id="Path-4"></path>
+                        <path d="M98.8991384,79.4994316 L7.10093778,26.4997158" id="Path-4"></path>
+                        <path d="M79.499896,98.898674 L26.5001802,7.10047344" id="Path-4"></path>
+                        <path d="M53,0 L53,105.999432" id="Path-4"></path>
+                        <path d="M105.999716,52.9997158 L0.00028418057,52.9997158" id="Path-4"></path>
+                    </g>
+                </g>
+                <g id="dial" transform="translate(70.000000, 70.000000) rotate(0.000000) translate(-70.000000, -70.000000) translate(20.000000, 20.000000)">
+                    <circle id="Oval" stroke="#979797" fill="#FFFFFF" cx="50" cy="50" r="50"></circle>
+                    <g transform = "rotate(0)">
+                      <animateTransform id="dial_animator" attributeName="transform"
+                          attributeType="XML"
+                          type="rotate"
+                          from="0 50 50"
+                          to="360 50 50"
+                          dur="0s"
+                          fill="freeze"
+                          repeatCount="1"/>
+                    <path d="M36,16.6996811 C38.9266759,31.4725142 40.3900139,42.552139 40.3900139,49.9385556 C40.3900139,57.3249721 38.9266759,67.9888938 36,81.9303205 C42.0934806,85.9767735 46.7601473,88 50,88 C53.2398527,88 57.9065194,85.9767735 64,81.9303205 C60.87179,67.8853244 59.307685,57.2214028 59.307685,49.9385556 C59.307685,42.6557083 60.87179,31.5760835 64,16.6996811 C57.8253876,13.5665604 53.1587209,12 50,12 C46.8412791,12 42.1746124,13.5665604 36,16.6996811 Z" id="Path-5" stroke="#979797"></path>
+                    <polygon id="Triangle" fill="#FF0606" points="50 3 54 9 46 9"></polygon>
+                  </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
+
+<!-- <input id="locationTextField" type="text" size="50">
+<div id="map"></div> -->
+</html>
